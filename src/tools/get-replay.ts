@@ -54,7 +54,7 @@ async function writeReplayToFile(
 
 export function registerGetReplayTool(server: McpServer) {
   server.tool(
-    "get-replay",
+    "rollbar-get-replay",
     "Get replay data for a specific session replay in Rollbar",
     {
       environment: z

@@ -6,7 +6,7 @@ import { RollbarApiResponse } from "../types/index.js";
 
 export function registerUpdateItemTool(server: McpServer) {
   server.tool(
-    "update-item",
+    "rollbar-update-item",
     "Update an item in Rollbar (status, level, title, assignment, etc.)",
     {
       itemId: z.number().int().describe("The ID of the item to update"),

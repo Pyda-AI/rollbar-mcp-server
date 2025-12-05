@@ -11,26 +11,30 @@ const server = new McpServer({
   capabilities: {
     resources: {},
     tools: {
-      "get-item-details": {
+      "rollbar-get-item-details": {
         description:
           "Get detailed information about a Rollbar item by its counter",
       },
-      "get-deployments": {
+      "rollbar-get-deployments": {
         description:
           "Get deployment status and information for a Rollbar project",
       },
-      "get-version": {
+      "rollbar-get-version": {
         description: "Get version data and information for a Rollbar project",
       },
-      "get-top-items": {
+      "rollbar-get-top-items": {
         description: "Get list of top items in the Rollbar project",
       },
-      "list-items": {
+      "rollbar-list-items": {
         description:
           "List all items in the Rollbar project with optional search and filtering",
       },
-      "get-replay": {
+      "rollbar-get-replay": {
         description: "Get replay data for a specific session replay in Rollbar",
+      },
+      "rollbar-update-item": {
+        description:
+          "Update an item in Rollbar (status, level, title, assignment, etc.)",
       },
     },
   },

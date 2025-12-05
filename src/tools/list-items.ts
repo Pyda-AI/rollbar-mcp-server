@@ -9,7 +9,7 @@ import {
 
 export function registerListItemsTool(server: McpServer) {
   server.tool(
-    "list-items",
+    "rollbar-list-items",
     "List all items in the Rollbar project with optional search and filtering",
     {
       status: z

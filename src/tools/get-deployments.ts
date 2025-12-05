@@ -6,7 +6,7 @@ import { RollbarApiResponse, RollbarDeployResponse } from "../types/index.js";
 
 export function registerGetDeploymentsTool(server: McpServer) {
   server.tool(
-    "get-deployments",
+    "rollbar-get-deployments",
     "Get deployments data from Rollbar",
     {
       limit: z

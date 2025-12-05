@@ -6,7 +6,7 @@ import { RollbarApiResponse, RollbarVersionsResponse } from "../types/index.js";
 
 export function registerGetVersionTool(server: McpServer) {
   server.tool(
-    "get-version",
+    "rollbar-get-version",
     "Get version details for a Rollbar project",
     {
       version: z.coerce.string().describe("Version string (e.g. git sha)"),

@@ -6,7 +6,7 @@ import { RollbarApiResponse, RollbarTopItemResponse } from "../types/index.js";
 
 export function registerGetTopItemsTool(server: McpServer) {
   server.tool(
-    "get-top-items",
+    "rollbar-get-top-items",
     "Get list of top items in the Rollbar project",
     {
       environment: z.coerce

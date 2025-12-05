@@ -11,7 +11,7 @@ import { truncateOccurrence } from "../utils/truncation.js";
 
 export function registerGetItemDetailsTool(server: McpServer) {
   server.tool(
-    "get-item-details",
+    "rollbar-get-item-details",
     "Get item details for a Rollbar item",
     {
       counter: z.number().int().describe("Rollbar item counter"),
