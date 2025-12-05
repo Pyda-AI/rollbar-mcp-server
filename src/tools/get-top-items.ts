@@ -13,12 +13,19 @@ export function registerGetTopItemsTool(server: McpServer) {
         .string()
         .default("production")
         .describe("Environment name (default: production)"),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({ environment }) => {
+    async (args) => {
+      const { environment, rollbar_access_token } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       const reportUrl = `${ROLLBAR_API_BASE}/reports/top_active_items?hours=24&environments=${environment}&sort=occurrences`;
       const reportResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarTopItemResponse>
-      >(reportUrl, "get-top-items");
+      >(reportUrl, "get-top-items", rollbar_access_token);
 
       if (reportResponse.err !== 0) {
         const errorMessage =

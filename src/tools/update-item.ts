@@ -39,17 +39,25 @@ export function registerUpdateItemTool(server: McpServer) {
         .describe(
           "The ID of the team to assign as owner (Advanced/Enterprise accounts only)",
         ),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({
-      itemId,
-      status,
-      level,
-      title,
-      assignedUserId,
-      resolvedInVersion,
-      snoozed,
-      teamId,
-    }) => {
+    async (args) => {
+      const {
+        itemId,
+        status,
+        level,
+        title,
+        assignedUserId,
+        resolvedInVersion,
+        snoozed,
+        teamId,
+        rollbar_access_token,
+      } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       const updateData: Record<string, unknown> = {};
 
       if (status !== undefined) updateData.status = status;
@@ -70,6 +78,7 @@ export function registerUpdateItemTool(server: McpServer) {
       const response = await makeRollbarRequest<RollbarApiResponse<unknown>>(
         url,
         "update-item",
+        rollbar_access_token,
         {
           method: "PATCH",
           headers: {

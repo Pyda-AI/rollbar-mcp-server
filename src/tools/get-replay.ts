@@ -3,25 +3,26 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  buildReplayResourceUri,
-  cacheReplayData,
-  fetchReplayData,
-} from "../resources/index.js";
+import { ROLLBAR_API_BASE } from "../config.js";
+import { makeRollbarRequest } from "../utils/api.js";
+import { RollbarApiResponse } from "../types/index.js";
 
-function buildResourceLinkDescription(
-  environment: string,
-  sessionId: string,
-  replayId: string,
-) {
-  return `Session replay payload for session ${sessionId} (${environment}) replay ${replayId}.`;
-}
-
-const DELIVERY_MODE = z.enum(["resource", "file"]);
 const REPLAY_FILE_DIRECTORY = path.join(tmpdir(), "rollbar-mcp-replays");
 
 function sanitizeForFilename(value: string) {
   return value.replace(/[^a-z0-9-_]+/gi, "-").replace(/-+/g, "-");
+}
+
+function buildReplayApiUrl(
+  environment: string,
+  sessionId: string,
+  replayId: string,
+): string {
+  return `${ROLLBAR_API_BASE}/environment/${encodeURIComponent(
+    environment,
+  )}/session/${encodeURIComponent(sessionId)}/replay/${encodeURIComponent(
+    replayId,
+  )}`;
 }
 
 async function writeReplayToFile(
@@ -65,62 +66,42 @@ export function registerGetReplayTool(server: McpServer) {
         .min(1)
         .describe("Session identifier that owns the replay"),
       replayId: z.string().min(1).describe("Replay identifier to retrieve"),
-      delivery: DELIVERY_MODE.optional().describe(
-        "How to return the replay payload. Defaults to 'file' (writes JSON to a temp file); 'resource' returns a rollbar:// link.",
-      ),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({ environment, sessionId, replayId, delivery }) => {
-      const deliveryMode = delivery ?? "file";
+    async (args) => {
+      const { environment, sessionId, replayId, rollbar_access_token } = args;
 
-      const replayData = await fetchReplayData(
-        environment,
-        sessionId,
-        replayId,
-      );
-
-      const resourceUri = buildReplayResourceUri(
-        environment,
-        sessionId,
-        replayId,
-      );
-
-      cacheReplayData(resourceUri, replayData);
-
-      if (deliveryMode === "file") {
-        const filePath = await writeReplayToFile(
-          replayData,
-          environment,
-          sessionId,
-          replayId,
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Replay ${replayId} for session ${sessionId} in ${environment} saved to ${filePath}. This file is not automatically deleted—remove it when finished or rerun with delivery="resource" for a rollbar:// link.`,
-            },
-          ],
-        };
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
       }
+
+      const replayUrl = buildReplayApiUrl(environment, sessionId, replayId);
+
+      const replayResponse = await makeRollbarRequest<
+        RollbarApiResponse<unknown>
+      >(replayUrl, "get-replay", rollbar_access_token);
+
+      if (replayResponse.err !== 0) {
+        const errorMessage =
+          replayResponse.message ||
+          `Unknown error (code: ${replayResponse.err})`;
+        throw new Error(`Rollbar API returned error: ${errorMessage}`);
+      }
+
+      const replayData = replayResponse.result;
+
+      const filePath = await writeReplayToFile(
+        replayData,
+        environment,
+        sessionId,
+        replayId,
+      );
 
       return {
         content: [
           {
             type: "text",
-            text: `Replay ${replayId} for session ${sessionId} in ${environment} is available as ${resourceUri}. Use read-resource to download the JSON payload.`,
-          },
-          {
-            type: "resource_link",
-            name: resourceUri,
-            title: `Replay ${replayId}`,
-            uri: resourceUri,
-            description: buildResourceLinkDescription(
-              environment,
-              sessionId,
-              replayId,
-            ),
-            mimeType: "application/json",
+            text: `Replay ${replayId} for session ${sessionId} in ${environment} saved to ${filePath}. This file is not automatically deleted—remove it when finished.`,
           },
         ],
       };

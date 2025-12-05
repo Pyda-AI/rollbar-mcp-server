@@ -51,22 +51,23 @@ export function registerListItemsTool(server: McpServer) {
         .string()
         .optional()
         .describe("Search query to filter items by title or content"),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({
-      status,
-      level,
-      environment,
-      page,
-      limit,
-      query,
-    }: {
-      status?: string;
-      level?: string[];
-      environment?: string;
-      page?: number;
-      limit?: number;
-      query?: string;
-    }) => {
+    async (args) => {
+      const {
+        status,
+        level,
+        environment,
+        page,
+        limit,
+        query,
+        rollbar_access_token,
+      } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       // Build query parameters
       const params = new URLSearchParams();
 
@@ -98,7 +99,7 @@ export function registerListItemsTool(server: McpServer) {
 
       const listResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarListItemsResponse>
-      >(listUrl, "list-items");
+      >(listUrl, "list-items", rollbar_access_token);
 
       if (listResponse.err !== 0) {
         const errorMessage =

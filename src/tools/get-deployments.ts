@@ -13,12 +13,19 @@ export function registerGetDeploymentsTool(server: McpServer) {
         .number()
         .int()
         .describe("Number of Rollbar deployments to retrieve"),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({ limit }) => {
+    async (args) => {
+      const { limit, rollbar_access_token } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       const deploysUrl = `${ROLLBAR_API_BASE}/deploys?limit=${limit}`;
       const deploysResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarDeployResponse>
-      >(deploysUrl, "get-deployments");
+      >(deploysUrl, "get-deployments", rollbar_access_token);
 
       if (deploysResponse.err !== 0) {
         const errorMessage =

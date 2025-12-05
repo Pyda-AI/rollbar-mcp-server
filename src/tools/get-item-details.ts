@@ -23,13 +23,20 @@ export function registerGetItemDetailsTool(server: McpServer) {
         .describe(
           "Maximum tokens for occurrence data in response (default: 20000). Occurrence response will be truncated if it exceeds this limit.",
         ),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({ counter, max_tokens }) => {
+    async (args) => {
+      const { counter, max_tokens, rollbar_access_token } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       // Redirects are followed, so we get an item response from the counter request
       const counterUrl = `${ROLLBAR_API_BASE}/item_by_counter/${counter}`;
       const itemResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarItemResponse>
-      >(counterUrl, "get-item-details");
+      >(counterUrl, "get-item-details", rollbar_access_token);
 
       if (itemResponse.err !== 0) {
         const errorMessage =
@@ -42,7 +49,7 @@ export function registerGetItemDetailsTool(server: McpServer) {
       const occurrenceUrl = `${ROLLBAR_API_BASE}/instance/${item.last_occurrence_id}`;
       const occurrenceResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarOccurrenceResponse>
-      >(occurrenceUrl, "get-item-details");
+      >(occurrenceUrl, "get-item-details", rollbar_access_token);
 
       if (occurrenceResponse.err !== 0) {
         // We got the item but failed to get occurrence. Return just the item data.

@@ -11,14 +11,6 @@ export const ROLLBAR_API_BASE = resolveRollbarApiBase();
 export function getUserAgent(toolName: string): string {
   return `rollbar-mcp-server/${packageJson.version} (tool: ${toolName})`;
 }
-export const ROLLBAR_ACCESS_TOKEN = process.env.ROLLBAR_ACCESS_TOKEN;
-
-if (!ROLLBAR_ACCESS_TOKEN) {
-  console.error(
-    "Error: ROLLBAR_ACCESS_TOKEN is not set in env var or .env file",
-  );
-  process.exit(1);
-}
 
 function resolveRollbarApiBase(): string {
   const envValue = process.env.ROLLBAR_API_BASE?.trim();

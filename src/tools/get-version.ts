@@ -14,12 +14,19 @@ export function registerGetVersionTool(server: McpServer) {
         .string()
         .default("production")
         .describe("Environment name (default: production)"),
+      rollbar_access_token: z.string().optional(),
     },
-    async ({ version, environment }) => {
+    async (args) => {
+      const { version, environment, rollbar_access_token } = args;
+
+      if (!rollbar_access_token) {
+        throw new Error("rollbar_access_token is required");
+      }
+
       const versionsUrl = `${ROLLBAR_API_BASE}/versions/${version}?environment=${environment}`;
       const versionsResponse = await makeRollbarRequest<
         RollbarApiResponse<RollbarVersionsResponse>
-      >(versionsUrl, "get-version");
+      >(versionsUrl, "get-version", rollbar_access_token);
 
       if (versionsResponse.err !== 0) {
         const errorMessage =
